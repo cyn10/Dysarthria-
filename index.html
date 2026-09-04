@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dysarthria Detection System</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <!-- ABSOLUTE PATHS -->
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+            <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <h1>Dysarthria Detection System</h1>
+            </div>
+            <p class="tagline">AI-powered speech analysis with live recording & clinical insights</p>
+            
+            <!-- Navigation Links -->
+            <div class="header-actions">
+                <a href="/dashboard" class="dashboard-link">
+                    <i class="fas fa-chart-line"></i> View Dashboard
+                </a>
+                <a href="/progress" class="progress-link">
+                    <i class="fas fa-history"></i> Progress
+                </a>
+                <a href="/patients" class="patients-link">
+                    <i class="fas fa-users"></i> Patients
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel - Upload/Record -->
+            <div class="left-panel">
+                <div class="upload-section card">
+                    <h2><i class="fas fa-microphone-alt"></i> Speech Input</h2>
+                    <p class="instruction">Choose how to provide speech sample for analysis:</p>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="upload">
+                                <i class="fas fa-upload"></i> Upload Audio
+                            </button>
+                            <button class="tab-btn" data-tab="record">
+                                <i class="fas fa-microphone"></i> Record Live
+                            </button>
+                        </div>
+                        
+                        <!-- Upload Tab -->
+                        <div class="tab-content active" id="uploadTab">
+                            <div class="upload-area" id="dropArea">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <p class="upload-text">Drag & drop your audio file here</p>
+                                <p class="upload-subtext">or click to browse</p>
+                                <input type="file" id="audioFile" accept=".wav,.mp3,.flac,.m4a,.ogg" hidden>
+                                <div class="file-info" id="fileInfo"></div>
+                            </div>
+                            
+                            <!-- Audio Player Section -->
+                            <div class="audio-player-section" id="audioPlayerSection" style="display: none;">
+                                <h4><i class="fas fa-play-circle"></i> Audio Player</h4>
+                                <div class="audio-player">
+                                    <audio id="audioPlayer" controls style="width: 100%;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                    <div class="audio-controls">
+                                        <button class="audio-control-btn" id="playBtn">
+                                            <i class="fas fa-play"></i> Play
+                                        </button>
+                                        <button class="audio-control-btn" id="pauseBtn">
+                                            <i class="fas fa-pause"></i> Pause
+                                        </button>
+                                        <button class="audio-control-btn" id="stopBtn">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                        <button class="audio-control-btn" id="downloadBtn">
+                                            <i class="fas fa-download"></i> Download
+                                        </button>
+                                    </div>
+                                    <div class="audio-info">
+                                        <p><i class="fas fa-clock"></i> Duration: <span id="audioDuration">0:00</span></p>
+                                        <p><i class="fas fa-volume-up"></i> Volume: <input type="range" id="volumeControl" min="0" max="100" value="70"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Record Live Tab -->
+                        <div class="tab-content" id="recordTab">
+                            <div class="recording-container">
+                                <div class="recording-status" id="recordingStatus">
+                                    <i class="fas fa-circle" style="color:#e74c3c"></i>
+                                    <span>Ready to record</span>
+                                </div>
+                                
+                                <!-- Waveform Visualization -->
+                                <div class="waveform-container">
+                                    <canvas id="waveformCanvas"></canvas>
+                                    <div class="waveform-labels">
+                                        <span>0s</span>
+                                        <span id="recordingTime">0.0s</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recording Controls -->
+                                <div class="recording-controls">
+                                    <button class="record-btn" id="startRecordBtn">
+                                        <i class="fas fa-circle"></i> Start Recording
+                                    </button>
+                                    <button class="record-btn secondary" id="stopRecordBtn" disabled>
+                                        <i class="fas fa-stop"></i> Stop
+                                    </button>
+                                    <button class="record-btn secondary" id="playRecordingBtn" disabled>
+                                        <i class="fas fa-play"></i> Playback
+                                    </button>
+                                    <button class="record-btn secondary" id="clearRecordingBtn" disabled>
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                                
+                                <!-- Recording Info -->
+                                <div class="recording-info">
+                                    <div class="info-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Duration: <span id="recordDuration">0.0s</span></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-wave-square"></i>
+                                        <span>Volume: <span id="recordVolume">0%</span></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-microphone"></i>
+                                        <span>Status: <span id="recordStatus">Idle</span></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recording Tips -->
+                                <div class="tips-box">
+                                    <h4><i class="fas fa-lightbulb"></i> Recording Tips:</h4>
+                                    <ul>
+                                        <li>Speak clearly at normal volume</li>
+                                        <li>Record in a quiet environment</li>
+                                        <li>Speak for at least 10 seconds</li>
+                                        <li>Hold microphone 6-12 inches from mouth</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Severity Selection (Shared) -->
+                    <div class="severity-section">
+                        <h4><i class="fas fa-sliders-h"></i> Speech Severity Setting</h4>
+                        <div class="severity-buttons">
+                            <button class="severity-btn active" data-severity="mild">
+                                <i class="fas fa-volume-up"></i> Mild
+                            </button>
+                            <button class="severity-btn" data-severity="moderate">
+                                <i class="fas fa-volume-down"></i> Moderate
+                            </button>
+                            <button class="severity-btn" data-severity="severe">
+                                <i class="fas fa-volume-off"></i> Severe
+                            </button>
+                        </div>
+                        <p class="severity-info" id="severityInfo">
+                            <i class="fas fa-info-circle"></i> Optimized for: Clear speech with slight articulation difficulties
+                        </p>
+                    </div>
+                    
+                    <!-- File Requirements -->
+                    <div class="file-requirements">
+                        <h4><i class="fas fa-info-circle"></i> Supported Inputs:</h4>
+                        <ul>
+                            <li><strong>Upload:</strong> WAV, MP3, FLAC, M4A, OGG (max 50MB)</li>
+                            <li><strong>Live Recording:</strong> Direct microphone input</li>
+                            <li><strong>Recommendations:</strong> AI-powered suggestions</li>
+                            <li><strong>Metrics:</strong> Top 10 feature analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Analyze Button -->
+                    <button class="analyze-btn" id="analyzeBtn" disabled>
+                        <i class="fas fa-play"></i> Analyze & Transcribe
+                    </button>
+                    
+                    <button class="sample-btn" id="sampleBtn">
+                        <i class="fas fa-vial"></i> Try Sample Audio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="right-panel">
+                <div class="results-section card">
+                    <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
+                    
+                    <!-- Status Messages -->
+                    <div class="status-message" id="statusMessage">
+                        Ready to analyze speech
+                    </div>
+                    
+                    <div class="results-placeholder" id="resultsPlaceholder">
+                        <i class="fas fa-chart-bar placeholder-icon"></i>
+                        <p class="placeholder-text">Results will appear here after analysis</p>
+                        <p class="placeholder-subtext">Record or upload speech and click "Analyze & Transcribe"</p>
+                    </div>
+                    
+                    <div class="results-content" id="resultsContent" style="display: none;">
+                        <!-- Progress Steps -->
+                        <div class="progress-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Audio Captured</h4>
+                                    <p>Speech sample ready</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Transcription</h4>
+                                    <p>Converting speech to text</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Analysis</h4>
+                                    <p>Detecting dysarthria features</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prediction Card -->
+                        <div class="prediction-card" id="predictionCard">
+                            <div class="prediction-header">
+                                <h3>Dysarthria Prediction</h3>
+                                <div class="confidence-badge" id="confidenceBadge">
+                                    <span id="confidenceValue">0%</span> Confidence
+                                </div>
+                            </div>
+                            <div class="prediction-result" id="predictionResult">
+                                <i class="fas fa-question-circle"></i>
+                                <span id="predictionText">Waiting for analysis...</span>
+                            </div>
+                            <div class="prediction-explanation" id="predictionExplanation">
+                                <!-- Filled by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Probability Chart -->
+                        <div class="probability-section">
+                            <h3><i class="fas fa-chart-pie"></i> Probability Distribution</h3>
+                            <div class="probability-bars">
+                                <div class="probability-bar healthy-bar">
+                                    <div class="bar-label">
+                                        <span class="bar-title">Healthy</span>
+                                        <span class="bar-percent" id="healthyPercent">0%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" id="healthyBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="probability-bar dysarthric-bar">
+                                    <div class="bar-label">
+                                        <span class="bar-title">Dysarthric</span>
+                                        <span class="bar-percent" id="dysarthricPercent">0%</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" id="dysarthricBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature Metrics Section (Collapsible) -->
+                        <div class="collapsible-section">
+                            <div class="collapsible-header">
+                                <h3><i class="fas fa-chart-bar"></i> Feature Analysis</h3>
+                                <button class="collapse-btn" id="collapseMetricsBtn">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="collapsible-content active" id="metricsContent">
+                                <div class="metrics-description">
+                                    <p>Top 10 acoustic features used in prediction, ranked by importance:</p>
+                                </div>
+                                <div class="metrics-container">
+                                    <canvas id="featuresChart"></canvas>
+                                    <div class="metrics-list" id="metricsList">
+                                        <!-- Filled by JavaScript -->
+                                    </div>
+                                </div>
+                                <div class="metrics-footer">
+                                    <p><i class="fas fa-info-circle"></i> Higher importance indicates stronger influence on prediction</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recommendations Section (Collapsible) -->
+                        <div class="collapsible-section">
+                            <div class="collapsible-header">
+                                <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+                                <button class="collapse-btn" id="collapseRecsBtn">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="collapsible-content active" id="recommendationsContent">
+                                <div class="recommendations-container" id="recommendationsContainer">
+                                    <!-- Filled by JavaScript -->
+                                </div>
+                                <div class="recommendations-actions">
+                                    <button class="action-btn" id="printRecsBtn">
+                                        <i class="fas fa-print"></i> Print Recommendations
+                                    </button>
+                                    <button class="action-btn" id="saveRecsBtn">
+                                        <i class="fas fa-save"></i> Save as PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transcription Card -->
+                        <div class="transcription-card card">
+                            <h3><i class="fas fa-comment-dots"></i> Speech Transcription</h3>
+                            <div class="transcription-content" id="transcriptionContent">
+                                <p class="transcription-text" id="transcriptionText">
+                                    <i class="fas fa-spinner fa-spin"></i> Transcribing speech...
+                                </p>
+                                <div class="transcription-meta">
+                                    <span class="meta-item">
+                                        <i class="fas fa-clock"></i> <span id="transcriptionLength">0</span> characters
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-sliders-h"></i> Severity: <span id="transcriptionSeverity">moderate</span>
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-bolt"></i> <span id="transcriptionEngine">Vosk AI</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="transcription-actions">
+                                <button class="action-btn copy-btn" id="copyTranscriptionBtn">
+                                    <i class="fas fa-copy"></i> Copy Text
+                                </button>
+                                <button class="action-btn audio-btn" id="playTranscriptionBtn">
+                                    <i class="fas fa-volume-up"></i> Read Aloud
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Technical Details -->
+                        <div class="technical-details">
+                            <h3><i class="fas fa-cogs"></i> Technical Details</h3>
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">Features Used</span>
+                                    <span class="detail-value" id="featuresUsed">0/960</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Input Type</span>
+                                    <span class="detail-value" id="inputType">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Transcription Engine</span>
+                                    <span class="detail-value" id="engineName">-</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Analysis Time</span>
+                                    <span class="detail-value" id="analysisTime">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="action-btn save-btn" id="saveResultBtn">
+                                <i class="fas fa-save"></i> Save Full Report
+                            </button>
+                            <button class="action-btn play-audio-btn" id="playOriginalAudioBtn">
+                                <i class="fas fa-play-circle"></i> Play Audio
+                            </button>
+                            <button class="action-btn new-analysis-btn" id="newAnalysisBtn">
+                                <i class="fas fa-redo"></i> New Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><i class="fas fa-flask"></i> Enhanced Analysis</h4>
+                    <p>Now with live recording, feature metrics, and AI-powered recommendations for clinical use.</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-microphone"></i> Live Features</h4>
+                    <p>Direct microphone recording with real-time waveform visualization and quality monitoring.</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Clinical Use</h4>
+                    <p>This tool supports screening. Always consult healthcare professionals for diagnosis.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 Dysarthria Detection System | Enhanced with Live Recording & Clinical Insights</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript - ABSOLUTE PATH -->
+<script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/static/sw.js')
+            .then(function(registration) {
+              console.log('✅ ServiceWorker registered');
+            })
+            .catch(function(err) {
+              console.log('❌ ServiceWorker registration failed:', err);
+            });
+        });
+      }
+    </script>
+    <script src="/static/script.js"></script>
+</body>
+</html>
